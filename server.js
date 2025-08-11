@@ -1,12 +1,15 @@
-// Server.js
 import express from "express";
 import multer from "multer";
 import dotenv from "dotenv";
 import fs from "fs";
 import cors from "cors";
 import Groq from "groq-sdk";
-
+import path from "path";
+import { fileURLToPath } from "url";
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const upload = multer({ dest: "uploads/" });
@@ -14,25 +17,23 @@ const upload = multer({ dest: "uploads/" });
 app.use(cors());
 app.use(express.json());
 
+app.use(express.static(__dirname));
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-// ---------- Helper: Extract JSON safely ----------
+//Extract JSON safely
 function extractJSON(text) {
   console.log("Attempting to extract JSON from:", text); // Debug log
   
   try {
-    // Method 1: Try to parse the entire response as JSON
     return JSON.parse(text.trim());
   } catch (err1) {
     try {
-      // Method 2: Find the first {...} block
       let match = text.match(/\{[\s\S]*\}/);
       if (match) {
         return JSON.parse(match[0]);
       }
     } catch (err2) {
       try {
-        // Method 3: Remove markdown code blocks if present
         const cleaned = text.replace(/```json\n?|\n?```/g, '').trim();
         return JSON.parse(cleaned);
       } catch (err3) {
@@ -43,12 +44,16 @@ function extractJSON(text) {
   return null;
 }
 
-// ---------- Endpoint: Analyze Voice ----------
+// Serve index.html on root
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
+
+// Endpoint: Analyze Voice
 app.post("/analyze", upload.array("files"), async (req, res) => {
   try {
     let textSamples = [];
 
-    // Add pasted text from frontend
     if (req.body.textSamples) {
       const pasted = Array.isArray(req.body.textSamples)
         ? req.body.textSamples
@@ -56,18 +61,16 @@ app.post("/analyze", upload.array("files"), async (req, res) => {
       textSamples.push(...pasted);
     }
 
-    // Add uploaded files
     for (let file of req.files) {
       const content = fs.readFileSync(file.path, "utf8");
       textSamples.push(content);
-      fs.unlinkSync(file.path); // remove temp file
+      fs.unlinkSync(file.path);
     }
 
     if (!textSamples.length) {
       return res.status(400).json({ error: "No text provided" });
     }
 
-    // Create the analysis prompt
     const combinedText = textSamples.join("\n\n---\n\n");
     const prompt = `
 You are a brand voice analyzer. Analyze the following text and return ONLY a valid JSON object with no additional text, explanations, or formatting.
@@ -101,10 +104,10 @@ Return ONLY the JSON object:
     });
 
     const output = response.choices[0].message.content;
-    console.log("Raw LLM Response:", output); // Debug log
+    console.log("Raw LLM Response:", output);
     
     const jsonData = extractJSON(output);
-    console.log("Extracted JSON:", jsonData); // Debug log
+    console.log("Extracted JSON:", jsonData);
 
     if (jsonData) {
       res.json(jsonData);
@@ -117,7 +120,7 @@ Return ONLY the JSON object:
   }
 });
 
-// ---------- Endpoint: Generate Content ----------
+// Endpoint: Generate Content
 app.post("/generate", async (req, res) => {
   try {
     const { profile, topic } = req.body;
@@ -156,7 +159,7 @@ Requirements:
     res.status(500).json({ error: "Content generation failed" });
   }
 });
-
+//Start server
 app.listen(process.env.PORT || 5000, () => {
   console.log(`Server running on http://localhost:${process.env.PORT || 5000}`);
 });
