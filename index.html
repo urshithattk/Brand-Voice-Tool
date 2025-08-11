@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Brand Voice Tool</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- PDF.js Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- Mammoth.js for DOCX files -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside id="sidebar">
+    <div class="sidebar-header">
+      <h2>Saved Profiles</h2>
+      <i class="fas fa-times" id="closeSidebar"></i>
+    </div>
+    <div id="savedProfiles"></div>
+  </aside>
+  
+  <main>
+    <nav class="navbar">
+      <i class="fas fa-bars" id="openSidebar"></i>
+      <div class="nav-links">
+        <span id="navAnalyzer">Analyzer</span>
+        <span id="navGenerator">Generate</span>
+      </div>
+    </nav>
+
+    <header>
+      <h1>Brand Voice Tool</h1>
+    </header>
+
+    <!-- Save Profile Section -->
+    <section id="saveProfileSection" class="card hidden">
+      <input type="text" id="profileName" placeholder="Profile name">
+      <button id="saveProfileBtn">Save Profile</button>
+    </section>
+
+    <!-- Analyzer -->
+    <section id="analyzerSection" class="card">
+      <h3>Step 1: Analyze Voice</h3>
+      <textarea id="textInput" placeholder="Paste brand text here"></textarea>
+      
+      <!-- File Upload Section -->
+      <div class="file-upload-section">
+        <label for="fileInput" class="file-upload-label">
+          <i class="fas fa-upload"></i>
+          Upload Files (TXT, PDF, DOCX)
+        </label>
+        <input type="file" id="fileInput" multiple accept=".txt,.pdf,.docx" style="display: none;">
+        <div class="supported-formats">
+          <small>Supported formats: .txt, .pdf, .docx</small>
+        </div>
+      </div>
+      
+      <!-- File Preview Section -->
+      <div id="filePreview"></div>
+      
+      <button onclick="analyzeVoice()">Analyze Voice</button>
+
+      <!-- Result Table -->
+      <div id="analysisTable"></div>
+    </section>
+
+    <!-- Generator -->
+    <section id="generatorSection" class="card hidden">
+      <h3>Step 2: Generate Content</h3>
+      <input type="text" id="topicInput" placeholder="Enter topic">
+      <button onclick="generateContent()">Generate</button>
+      
+      <!-- Copy Button Container -->
+      <div id="copyContainer" class="copy-container hidden">
+        <button id="copyTextBtn" class="copy-btn" onclick="copyGeneratedText()">
+          <i class="fas fa-copy"></i> Copy Text
+        </button>
+      </div>
+      
+      <pre id="generatedResult"></pre>
+    </section>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
